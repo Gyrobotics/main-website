@@ -1,5 +1,5 @@
 // Configuration - Replace with your actual Gist ID
-const GIST_ID = '336d887a56e7024f19b6744a42271f61'; // ←←← REPLACE THIS WITH YOUR ACTUAL GIST ID
+const GIST_ID = '41bbbc3a835e6ba76c65fcb57afa0a22'; // ←←← REPLACE THIS WITH YOUR ACTUAL GIST ID
 
 // Mobile Menu Toggle
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
