@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidLang IDE</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <h1>KidLang IDE</h1>
+            <div class="auth-buttons">
+                <button id="google-login">Sign in with Google</button>
+                <button id="email-login">Sign in with Email</button>
+            </div>
+            
+            <div id="email-form" class="hidden">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button id="login-btn">Login</button>
+                <button id="signup-btn">Sign Up</button>
+                <button id="back-btn">Back</button>
+            </div>
+            
+            <div id="error-message" class="error hidden"></div>
+        </div>
+    </div>
+
+    <!-- Access Denied Screen -->
+    <div id="access-denied" class="screen hidden">
+        <div class="message-container">
+            <h2>Access Restricted</h2>
+            <p>Your institute does not have access to KidLang IDE.</p>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </div>
+
+    <!-- IDE Screen -->
+    <div id="ide-screen" class="screen hidden">
+        <header>
+            <div class="header-left">
+                <span class="logo">K</span>
+                <h1>KidLang IDE</h1>
+                <span id="user-display" class="user-email"></span>
+            </div>
+            <button id="ide-logout-btn">Logout</button>
+        </header>
+        
+        <div class="ide-layout">
+            <!-- Main Editor Area -->
+            <div class="editor-area">
+                <div class="editor-toolbar">
+                    <div class="editor-title">main.kl</div>
+                    <button id="run-btn">▶ Run</button>
+                </div>
+                <div class="code-editor-container">
+                    <div class="line-numbers" id="line-numbers">1</div>
+                    <textarea id="code-editor" spellcheck="false">say "Hello, KidLang!"
+set name = "Alice"
+say "Hello, " + name
+
+start i = 1 until i <= 5 increase i:
+    say "Count: " + str(i)
+
+define greet:
+    ask "What's your name?" -> user_name
+    say "Nice to meet you, " + user_name
+
+do greet</textarea>
+                </div>
+            </div>
+            
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="output-header">
+                    <h3>Text Output</h3>
+                    <button id="clear-output">🗑️</button>
+                </div>
+                <pre id="output-console"></pre>
+                <div id="error-display" class="error hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
