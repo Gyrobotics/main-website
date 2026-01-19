@@ -42,47 +42,53 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const errorMessage = document.getElementById('error-message');
 
+const codeEditor = document.getElementById('code-editor');
+const codeBlock = codeEditor.querySelector('code');
+const lineNumbers = document.getElementById('line-numbers');
+
 // Auto-update line numbers
 function updateLineNumbers() {
-    const textarea = document.getElementById('code-editor');
-    const lines = textarea.value.split('\n').length;
+    const lines = codeBlock.textContent.split('\n').length;
     let numbers = '';
     for (let i = 1; i <= lines; i++) {
         numbers += i + '\n';
     }
-    document.getElementById('line-numbers').textContent = numbers;
+    lineNumbers.textContent = numbers;
 }
 
-// Auto-indent and tab handling
-document.addEventListener('DOMContentLoaded', () => {
-    const textarea = document.getElementById('code-editor');
-    
-    textarea.addEventListener('input', updateLineNumbers);
-    textarea.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            textarea.value = textarea.value.substring(0, start) + '    ' + textarea.value.substring(end);
-            textarea.selectionStart = textarea.selectionEnd = start + 4;
-        }
-        if (e.key === 'Enter') {
-            const lines = textarea.value.substring(0, textarea.selectionStart).split('\n');
-            const currentLine = lines[lines.length - 1];
-            const match = currentLine.match(/^(\s*)/);
-            const indent = match ? match[0] : '';
-            setTimeout(() => {
-                const pos = textarea.selectionStart;
-                textarea.value = textarea.value.substring(0, pos) + indent + textarea.value.substring(pos);
-                textarea.selectionStart = textarea.selectionEnd = pos + indent.length;
-                updateLineNumbers();
-            }, 1);
-        }
-    });
-    
+// Sync scroll between line numbers and code
+codeEditor.addEventListener('scroll', () => {
+    lineNumbers.scrollTop = codeEditor.scrollTop;
+});
+
+// Handle input in contenteditable
+codeEditor.addEventListener('input', () => {
+    Prism.highlightElement(codeBlock);
     updateLineNumbers();
 });
 
+// Tab handling
+codeEditor.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        const tabNode = document.createTextNode('    ');
+        range.insertNode(tabNode);
+        range.setStartAfter(tabNode);
+        range.setEndAfter(tabNode);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        Prism.highlightElement(codeBlock);
+        updateLineNumbers();
+    }
+});
+
+// Initial highlight and line numbers
+Prism.highlightElement(codeBlock);
+updateLineNumbers();
+
+// Utility functions
 function showElement(element) {
     element.classList.remove('hidden');
 }
@@ -107,6 +113,7 @@ function clearOutput() {
     hideElement(errorDisplay);
 }
 
+// Auth state change
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
@@ -147,7 +154,7 @@ async function checkInstituteAccess(instituteName) {
             showElement(ideScreen);
         } else {
             hideElement(loginScreen);
-            hideElement(ide-screen);
+            hideElement(ideScreen); // Fixed typo: was 'ide-screen'
             showElement(accessDeniedScreen);
         }
     } catch (error) {
@@ -156,6 +163,7 @@ async function checkInstituteAccess(instituteName) {
     }
 }
 
+// Auth UI handlers
 googleLoginBtn.addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(showError);
@@ -206,10 +214,11 @@ signupBtn.addEventListener('click', () => {
 logoutBtn.addEventListener('click', () => auth.signOut());
 ideLogoutBtn.addEventListener('click', () => auth.signOut());
 
+// Run button
 runBtn.addEventListener('click', async () => {
     if (!currentUser) return;
 
-    const code = document.getElementById('code-editor').value.trim();
+    const code = codeBlock.textContent.trim();
     if (!code) {
         showError('Please enter some code to run');
         return;
@@ -294,7 +303,6 @@ final_output
         errorDisplay.textContent = `Runtime Error: ${err.message || JSON.stringify(err)}`;
         showElement(errorDisplay);
     } finally {
-        // Remove status indicator
         if (statusDiv.parentNode) {
             statusDiv.parentNode.removeChild(statusDiv);
         }

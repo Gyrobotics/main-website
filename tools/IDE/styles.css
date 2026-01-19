@@ -343,3 +343,61 @@ header {
         font-size: 0.85rem;
     }
 }
+/* === Syntax Highlighting Support === */
+#code-editor {
+  flex: 1;
+  padding: 12px;
+  outline: none;
+  background: transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  tab-size: 4;
+  color: var(--text);
+  min-width: 0;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-y: auto;
+  height: 100%;
+  margin: 0;
+}
+
+#code-editor code {
+  display: block;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+/* Ensure line numbers scroll with content */
+.code-editor-container {
+  display: flex;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+  height: 100%;
+  flex: 1;
+  padding: 0.5rem;
+}
+
+.line-numbers {
+  background: #f1f5f9;
+  color: var(--gray);
+  text-align: right;
+  padding: 12px 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  min-width: 40px;
+  user-select: none;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+  white-space: pre;
+  overflow-y: auto;
+  height: 100%;
+  /* Sync scroll with code */
+}
+
+#code-editor:focus {
+  outline: none;
+}
