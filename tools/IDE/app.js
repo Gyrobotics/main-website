@@ -8,6 +8,50 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 firestore = firebase.firestore();
 
+// === CURSOR POSITION UTILITIES ===
+function saveCursor(container) {
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(container);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    const startLen = preCaretRange.toString().length;
+    return startLen;
+}
+
+function restoreCursor(container, charIndex) {
+    if (charIndex === null || charIndex < 0) return;
+
+    const doc = container.ownerDocument || container.document;
+    const range = doc.createRange();
+    range.selectNodeContents(container);
+
+    let pos = 0;
+    const walker = doc.createTreeWalker(
+        container,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+
+    let node;
+    while ((node = walker.nextNode()) && pos < charIndex) {
+        const nextPos = pos + node.textContent.length;
+        if (nextPos >= charIndex) {
+            range.setStart(node, charIndex - pos);
+            range.collapse(true);
+            break;
+        }
+        pos = nextPos;
+    }
+
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
 // Initialize Pyodide
 async function initPyodide() {
     const pyodide = await loadPyodide();
@@ -42,8 +86,9 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const errorMessage = document.getElementById('error-message');
 
-const codeEditor = document.getElementById('code-editor');
-const codeBlock = codeEditor.querySelector('code');
+// Editor elements
+const codeEditorPre = document.getElementById('code-editor'); // the <pre>
+const codeBlock = codeEditorPre.querySelector('code');         // the <code>
 const lineNumbers = document.getElementById('line-numbers');
 
 // Auto-update line numbers
@@ -56,35 +101,54 @@ function updateLineNumbers() {
     lineNumbers.textContent = numbers;
 }
 
-// Sync scroll between line numbers and code
-codeEditor.addEventListener('scroll', () => {
-    lineNumbers.scrollTop = codeEditor.scrollTop;
+// Sync scroll between editor and line numbers
+codeEditorPre.addEventListener('scroll', () => {
+    lineNumbers.scrollTop = codeEditorPre.scrollTop;
 });
 
-// Handle input in contenteditable
-codeEditor.addEventListener('input', () => {
+// Handle input with cursor preservation
+let isHandlingInput = false;
+
+codeBlock.addEventListener('input', () => {
+    if (isHandlingInput) return;
+    isHandlingInput = true;
+
+    const savedPos = saveCursor(codeBlock);
     Prism.highlightElement(codeBlock);
     updateLineNumbers();
+
+    setTimeout(() => {
+        restoreCursor(codeBlock, savedPos);
+        isHandlingInput = false;
+    }, 0);
 });
 
-// Tab handling
-codeEditor.addEventListener('keydown', (e) => {
+// Tab key handling
+codeBlock.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
         e.preventDefault();
+        const savedPos = saveCursor(codeBlock);
+
         const selection = window.getSelection();
         const range = selection.getRangeAt(0);
+        range.deleteContents();
+
         const tabNode = document.createTextNode('    ');
         range.insertNode(tabNode);
         range.setStartAfter(tabNode);
         range.setEndAfter(tabNode);
+
         selection.removeAllRanges();
         selection.addRange(range);
+
+        // Re-highlight with cursor restore
         Prism.highlightElement(codeBlock);
         updateLineNumbers();
+        setTimeout(() => restoreCursor(codeBlock, savedPos + 4), 0);
     }
 });
 
-// Initial highlight and line numbers
+// Initial setup
 Prism.highlightElement(codeBlock);
 updateLineNumbers();
 
@@ -154,7 +218,7 @@ async function checkInstituteAccess(instituteName) {
             showElement(ideScreen);
         } else {
             hideElement(loginScreen);
-            hideElement(ideScreen); // Fixed typo: was 'ide-screen'
+            hideElement(ideScreen);
             showElement(accessDeniedScreen);
         }
     } catch (error) {
@@ -224,21 +288,22 @@ runBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Show running status
     const statusDiv = document.createElement('div');
     statusDiv.id = 'status-indicator';
     statusDiv.className = 'status-indicator';
     statusDiv.textContent = 'Running...';
-    statusDiv.style.position = 'absolute';
-    statusDiv.style.top = '5px';
-    statusDiv.style.right = '10px';
-    statusDiv.style.backgroundColor = '#dbeafe';
-    statusDiv.style.color = '#2563eb';
-    statusDiv.style.padding = '0.25rem 0.5rem';
-    statusDiv.style.borderRadius = '6px';
-    statusDiv.style.fontSize = '0.8rem';
-    statusDiv.style.fontWeight = '500';
-    statusDiv.style.zIndex = '1000';
+    Object.assign(statusDiv.style, {
+        position: 'absolute',
+        top: '5px',
+        right: '10px',
+        backgroundColor: '#dbeafe',
+        color: '#2563eb',
+        padding: '0.25rem 0.5rem',
+        borderRadius: '6px',
+        fontSize: '0.8rem',
+        fontWeight: '500',
+        zIndex: '1000'
+    });
 
     const toolbar = document.querySelector('.editor-toolbar');
     toolbar.appendChild(statusDiv);
