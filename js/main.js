@@ -23,7 +23,7 @@ if (mobileMenuToggle && mainNav) {
 async function fetchGistData() {
     try {
         const response = await fetch(
-            "https://gist.githubusercontent.com/SUDEEPMULLAGURI/GIST_ID/raw/gyrobotics-data.json"
+            "https://gist.github.com/SUDEEPMULLAGURI/41bbbc3a835e6ba76c65fcb57afa0a22.js"
         );
 
         if (!response.ok) {
