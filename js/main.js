@@ -22,14 +22,15 @@ if (mobileMenuToggle && mainNav) {
 // Fetch data from GitHub Gist
 async function fetchGistData() {
     try {
-        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+        const response = await fetch(
+            "https://gist.githubusercontent.com/USERNAME/GIST_ID/raw/gyrobotics-data.json"
+        );
+
         if (!response.ok) {
-            throw new Error(`Failed to fetch  ${response.status}`);
+            throw new Error(`Failed to fetch ${response.status}`);
         }
-        
-        const gist = await response.json();
-        const fileContent = Object.values(gist.files)[0].content;
-        return JSON.parse(fileContent);
+
+        return await response.json();
     } catch (error) {
         console.error('Error fetching Gist ', error);
         // Return default data if fetch fails
